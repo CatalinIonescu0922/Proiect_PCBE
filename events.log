@@ -1,0 +1,100 @@
+[2025-10-20 18:33:07.580] Stock Exchange STARTED
+[2025-10-20 18:33:07.903] ORDER PLACED: BUY Order #1 [Buyer-Charlie] - AAPL: 11 shares @ $175.58/share
+[2025-10-20 18:33:07.924] ORDER PLACED: BUY Order #2 [Buyer-Alice] - GOOGL: 11 shares @ $141.83/share
+[2025-10-20 18:33:08.030] ORDER PLACED: SELL Order #3 [Seller-Henry] - GOOGL: 27 shares @ $138.73/share
+[2025-10-20 18:33:08.172] ORDER PLACED: SELL Order #4 [Seller-Ivy] - TSLA: 26 shares @ $240.80/share
+[2025-10-20 18:33:08.277] ORDER PLACED: BUY Order #5 [Buyer-Ethan] - GOOGL: 37 shares @ $138.20/share
+[2025-10-20 18:33:08.295] ORDER PLACED: SELL Order #6 [Seller-Henry] - META: 29 shares @ $546.88/share
+[2025-10-20 18:33:08.327] ORDER PLACED: SELL Order #7 [Seller-Jack] - NFLX: 23 shares @ $658.04/share
+[2025-10-20 18:33:08.358] ORDER PLACED: SELL Order #8 [Seller-Frank] - META: 23 shares @ $529.06/share
+[2025-10-20 18:33:08.527] ORDER CANCELLED: SELL Order #4 [Seller-Ivy] - TSLA: 26 shares @ $240.80/share
+[2025-10-20 18:33:08.638] ORDER PLACED: SELL Order #9 [Seller-Grace] - AAPL: 49 shares @ $174.49/share
+[2025-10-20 18:33:08.642] ORDER PLACED: BUY Order #10 [Buyer-Diana] - NFLX: 10 shares @ $627.48/share
+[2025-10-20 18:33:08.776] ORDER PLACED: BUY Order #11 [Buyer-Bob] - AAPL: 51 shares @ $174.92/share
+[2025-10-20 18:33:08.811] ORDER CANCELLED: SELL Order #8 [Seller-Frank] - META: 23 shares @ $529.06/share
+[2025-10-20 18:33:08.978] ORDER CANCELLED: BUY Order #10 [Buyer-Diana] - NFLX: 10 shares @ $627.48/share
+[2025-10-20 18:33:09.026] ORDER PLACED: SELL Order #12 [Seller-Henry] - AAPL: 11 shares @ $181.88/share
+[2025-10-20 18:33:09.154] ORDER PLACED: SELL Order #13 [Seller-Frank] - GOOGL: 19 shares @ $133.70/share
+[2025-10-20 18:33:09.272] ORDER PLACED: SELL Order #14 [Seller-Henry] - META: 17 shares @ $521.78/share
+[2025-10-20 18:33:09.277] ORDER PLACED: SELL Order #15 [Seller-Jack] - AMZN: 51 shares @ $173.79/share
+[2025-10-20 18:33:09.280] ORDER PLACED: BUY Order #16 [Buyer-Charlie] - GOOGL: 25 shares @ $128.92/share
+[2025-10-20 18:33:09.299] ORDER PLACED: BUY Order #17 [Buyer-Ethan] - NFLX: 35 shares @ $650.57/share
+[2025-10-20 18:33:09.337] ORDER PLACED: BUY Order #18 [Buyer-Alice] - META: 25 shares @ $521.51/share
+[2025-10-20 18:33:09.340] ORDER PLACED: SELL Order #19 [Seller-Ivy] - GOOGL: 55 shares @ $137.56/share
+[2025-10-20 18:33:09.399] ORDER PLACED: BUY Order #20 [Buyer-Diana] - AAPL: 15 shares @ $168.09/share
+[2025-10-20 18:33:09.483] ORDER PLACED: BUY Order #21 [Buyer-Charlie] - GOOGL: 26 shares @ $137.61/share
+[2025-10-20 18:33:09.655] ORDER PLACED: BUY Order #22 [Buyer-Diana] - TSLA: 14 shares @ $248.25/share
+[2025-10-20 18:33:09.666] ORDER PLACED: SELL Order #23 [Seller-Grace] - MSFT: 73 shares @ $385.62/share
+[2025-10-20 18:33:09.679] ORDER PLACED: SELL Order #24 [Seller-Frank] - NFLX: 40 shares @ $617.80/share
+[2025-10-20 18:33:09.790] ORDER CANCELLED: BUY Order #18 [Buyer-Alice] - META: 25 shares @ $521.51/share
+[2025-10-20 18:33:09.900] ORDER PLACED: BUY Order #25 [Buyer-Charlie] - AMZN: 30 shares @ $180.66/share
+[2025-10-20 18:33:09.958] ORDER PLACED: BUY Order #26 [Buyer-Ethan] - NVDA: 74 shares @ $503.48/share
+[2025-10-20 18:33:09.968] ORDER PLACED: SELL Order #27 [Seller-Henry] - NFLX: 3 shares @ $651.32/share
+[2025-10-20 18:33:10.017] ORDER PLACED: SELL Order #28 [Seller-Frank] - META: 17 shares @ $500.22/share
+[2025-10-20 18:33:10.042] ORDER CANCELLED: BUY Order #22 [Buyer-Diana] - TSLA: 14 shares @ $248.25/share
+[2025-10-20 18:33:10.069] ORDER PLACED: SELL Order #29 [Seller-Grace] - NFLX: 73 shares @ $604.53/share
+[2025-10-20 18:33:10.149] ORDER PLACED: BUY Order #30 [Buyer-Alice] - MSFT: 23 shares @ $364.65/share
+[2025-10-20 18:33:10.216] ORDER PLACED: SELL Order #31 [Seller-Jack] - NFLX: 74 shares @ $612.19/share
+[2025-10-20 18:33:10.332] ORDER PLACED: BUY Order #32 [Buyer-Bob] - TSLA: 99 shares @ $237.60/share
+[2025-10-20 18:33:10.362] ORDER CANCELLED: BUY Order #26 [Buyer-Ethan] - NVDA: 74 shares @ $503.48/share
+[2025-10-20 18:33:10.383] ORDER PLACED: SELL Order #33 [Seller-Ivy] - AMZN: 14 shares @ $173.98/share
+[2025-10-20 18:33:10.465] ORDER PLACED: SELL Order #34 [Seller-Henry] - TSLA: 6 shares @ $230.51/share
+[2025-10-20 18:33:10.480] ORDER PLACED: SELL Order #35 [Seller-Frank] - NVDA: 13 shares @ $493.13/share
+[2025-10-20 18:33:10.491] ORDER CANCELLED: SELL Order #29 [Seller-Grace] - NFLX: 73 shares @ $604.53/share
+[2025-10-20 18:33:10.525] ORDER PLACED: BUY Order #36 [Buyer-Charlie] - GOOGL: 9 shares @ $146.13/share
+[2025-10-20 18:33:10.573] ORDER PLACED: BUY Order #37 [Buyer-Alice] - META: 5 shares @ $496.07/share
+[2025-10-20 18:33:10.850] ORDER PLACED: BUY Order #38 [Buyer-Charlie] - MSFT: 7 shares @ $390.36/share
+[2025-10-20 18:33:10.898] ORDER PLACED: BUY Order #39 [Buyer-Ethan] - GOOGL: 45 shares @ $146.29/share
+[2025-10-20 18:33:10.901] ORDER PLACED: BUY Order #41 [Buyer-Bob] - META: 97 shares @ $497.96/share
+[2025-10-20 18:33:10.902] ORDER PLACED: BUY Order #40 [Buyer-Diana] - MSFT: 8 shares @ $387.56/share
+[2025-10-20 18:33:10.915] ORDER CANCELLED: BUY Order #37 [Buyer-Alice] - META: 5 shares @ $496.07/share
+[2025-10-20 18:33:10.952] ORDER PLACED: SELL Order #42 [Seller-Ivy] - MSFT: 56 shares @ $393.57/share
+[2025-10-20 18:33:11.168] ORDER PLACED: SELL Order #43 [Seller-Henry] - MSFT: 19 shares @ $414.48/share
+[2025-10-20 18:33:11.271] ORDER PLACED: SELL Order #44 [Seller-Ivy] - META: 36 shares @ $517.90/share
+[2025-10-20 18:33:11.314] ORDER PLACED: SELL Order #45 [Seller-Frank] - GOOGL: 22 shares @ $133.39/share
+[2025-10-20 18:33:11.344] ORDER PLACED: BUY Order #46 [Buyer-Bob] - AMZN: 83 shares @ $170.91/share
+[2025-10-20 18:33:11.382] ORDER PLACED: BUY Order #47 [Buyer-Diana] - NFLX: 16 shares @ $601.32/share
+[2025-10-20 18:33:11.448] ORDER PLACED: SELL Order #48 [Seller-Jack] - TSLA: 67 shares @ $231.25/share
+[2025-10-20 18:33:11.635] ORDER PLACED: SELL Order #49 [Seller-Grace] - META: 44 shares @ $518.91/share
+[2025-10-20 18:33:11.647] ORDER PLACED: BUY Order #50 [Buyer-Diana] - TSLA: 57 shares @ $240.15/share
+[2025-10-20 18:33:11.701] ORDER PLACED: BUY Order #51 [Buyer-Charlie] - AMZN: 3 shares @ $181.19/share
+[2025-10-20 18:33:11.792] ORDER PLACED: BUY Order #52 [Buyer-Ethan] - NVDA: 59 shares @ $472.41/share
+[2025-10-20 18:33:11.893] ORDER PLACED: BUY Order #53 [Buyer-Alice] - GOOGL: 46 shares @ $137.21/share
+[2025-10-20 18:33:11.958] ORDER PLACED: SELL Order #54 [Seller-Henry] - AAPL: 16 shares @ $166.76/share
+[2025-10-20 18:33:12.144] ORDER PLACED: SELL Order #55 [Seller-Frank] - AMZN: 8 shares @ $174.94/share
+[2025-10-20 18:33:12.233] ORDER PLACED: SELL Order #56 [Seller-Jack] - MSFT: 46 shares @ $381.35/share
+[2025-10-20 18:33:12.276] ORDER PLACED: SELL Order #57 [Seller-Ivy] - AAPL: 35 shares @ $170.73/share
+[2025-10-20 18:33:12.339] ORDER PLACED: BUY Order #58 [Buyer-Diana] - MSFT: 13 shares @ $379.70/share
+[2025-10-20 18:33:12.353] ORDER PLACED: BUY Order #59 [Buyer-Charlie] - AMZN: 21 shares @ $176.59/share
+[2025-10-20 18:33:12.407] ORDER PLACED: BUY Order #60 [Buyer-Bob] - MSFT: 39 shares @ $389.16/share
+[2025-10-20 18:33:12.423] ORDER PLACED: SELL Order #61 [Seller-Henry] - MSFT: 4 shares @ $403.69/share
+[2025-10-20 18:33:12.685] ORDER PLACED: BUY Order #62 [Buyer-Ethan] - AMZN: 19 shares @ $180.60/share
+[2025-10-20 18:33:12.703] Buyer-Ethan has finished trading (placed 6 orders)
+[2025-10-20 18:33:12.735] ORDER PLACED: SELL Order #63 [Seller-Grace] - NFLX: 46 shares @ $632.90/share
+[2025-10-20 18:33:12.744] ORDER PLACED: SELL Order #64 [Seller-Frank] - GOOGL: 26 shares @ $133.73/share
+[2025-10-20 18:33:12.746] Seller-Frank has finished trading (placed 8 orders)
+[2025-10-20 18:33:12.769] ORDER PLACED: BUY Order #65 [Buyer-Bob] - GOOGL: 61 shares @ $134.40/share
+[2025-10-20 18:33:12.820] ORDER PLACED: SELL Order #66 [Seller-Ivy] - AAPL: 35 shares @ $169.03/share
+[2025-10-20 18:33:12.872] ORDER PLACED: SELL Order #67 [Seller-Henry] - TSLA: 15 shares @ $219.24/share
+[2025-10-20 18:33:13.027] ORDER PLACED: BUY Order #68 [Buyer-Alice] - MSFT: 18 shares @ $389.45/share
+[2025-10-20 18:33:13.071] Seller-Henry has finished trading (placed 10 orders)
+[2025-10-20 18:33:13.117] ORDER PLACED: BUY Order #69 [Buyer-Diana] - TSLA: 23 shares @ $214.30/share
+[2025-10-20 18:33:13.180] ORDER PLACED: BUY Order #70 [Buyer-Bob] - TSLA: 55 shares @ $218.65/share
+[2025-10-20 18:33:13.181] Buyer-Bob has finished trading (placed 7 orders)
+[2025-10-20 18:33:13.237] ORDER PLACED: SELL Order #71 [Seller-Grace] - NVDA: 66 shares @ $481.08/share
+[2025-10-20 18:33:13.296] ORDER PLACED: BUY Order #72 [Buyer-Charlie] - GOOGL: 16 shares @ $135.17/share
+[2025-10-20 18:33:13.368] ORDER PLACED: SELL Order #73 [Seller-Ivy] - GOOGL: 36 shares @ $138.02/share
+[2025-10-20 18:33:13.497] ORDER PLACED: BUY Order #74 [Buyer-Alice] - TSLA: 50 shares @ $209.80/share
+[2025-10-20 18:33:13.641] ORDER PLACED: BUY Order #75 [Buyer-Diana] - GOOGL: 51 shares @ $136.58/share
+[2025-10-20 18:33:13.643] Buyer-Diana has finished trading (placed 9 orders)
+[2025-10-20 18:33:13.667] ORDER PLACED: SELL Order #76 [Seller-Jack] - GOOGL: 77 shares @ $135.42/share
+[2025-10-20 18:33:13.670] Seller-Jack has finished trading (placed 6 orders)
+[2025-10-20 18:33:13.823] ORDER PLACED: BUY Order #77 [Buyer-Charlie] - MSFT: 25 shares @ $415.34/share
+[2025-10-20 18:33:13.894] ORDER PLACED: SELL Order #78 [Seller-Ivy] - MSFT: 25 shares @ $406.60/share
+[2025-10-20 18:33:13.895] Seller-Ivy has finished trading (placed 9 orders)
+[2025-10-20 18:33:14.016] Buyer-Charlie has finished trading (placed 10 orders)
+[2025-10-20 18:33:14.096] ORDER PLACED: SELL Order #79 [Seller-Grace] - NFLX: 17 shares @ $602.33/share
+[2025-10-20 18:33:14.096] Seller-Grace has finished trading (placed 7 orders)
+[2025-10-20 18:33:14.319] ORDER PLACED: BUY Order #80 [Buyer-Alice] - AMZN: 10 shares @ $177.24/share
+[2025-10-20 18:33:14.319] Buyer-Alice has finished trading (placed 8 orders)
+[2025-10-20 18:33:15.330] Stock Exchange STOPPED
