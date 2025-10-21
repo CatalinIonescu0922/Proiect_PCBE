@@ -16,6 +16,7 @@ public class Seller extends Thread {
     private final int minDelayMs;
     private final int maxDelayMs;
     private final int maxOrders;
+    private final List<Stock> availableStocks;
 
     public Seller(String sellerName, StockExchange exchange, int minShares, int maxShares, 
                   double priceVariance, int minDelayMs, int maxDelayMs, int maxOrders) {
@@ -28,6 +29,7 @@ public class Seller extends Thread {
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
         this.maxOrders = maxOrders;
+        this.availableStocks = exchange.getAllStocks();
         setName(sellerName);
     }
 
@@ -44,12 +46,10 @@ public class Seller extends Thread {
                 if (!exchange.isRunning()) break;
 
                 // Randomly select a stock
-                List<Stock> stocks = exchange.getAllStocks();
-                if (stocks.isEmpty()) continue;
-                
-                Stock stock = stocks.get(random.nextInt(stocks.size()));
-                
-                // Random quantity
+                if (availableStocks.isEmpty()) continue;
+
+                Stock stock = availableStocks.get(random.nextInt(availableStocks.size()));
+
                 int quantity = minShares + random.nextInt(maxShares - minShares + 1);
                 
                 // Price with variance (sellers might ask for slightly less)

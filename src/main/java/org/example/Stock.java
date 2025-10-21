@@ -9,10 +9,15 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Stock {
     private final String symbol;
     private final AtomicReference<Double> currentPrice;
+    private final Object lock = new Object();
 
     public Stock(String symbol, double initialPrice) {
         this.symbol = symbol;
         this.currentPrice = new AtomicReference<>(initialPrice);
+    }
+
+    public Object getLock() {
+        return lock;
     }
 
     public String getSymbol() {

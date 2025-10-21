@@ -2,28 +2,35 @@ package org.example;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Central stock exchange that manages all orders and matches buyers with sellers
  */
 public class StockExchange {
     private final Map<String, Stock> stocks;
-    private final List<BuyOrder> buyOrders;
-    private final List<SellOrder> sellOrders;
-    private final List<Transaction> transactionHistory;
+    private final Map<String, PriorityBlockingQueue<BuyOrder>> buyBooks;
+    private final Map<String, PriorityBlockingQueue<SellOrder>> sellBooks;
+    private final Queue<Transaction> transactionHistory;
     private volatile boolean running;
 
     public StockExchange() {
         this.stocks = new ConcurrentHashMap<>();
-        this.buyOrders = new CopyOnWriteArrayList<>();
-        this.sellOrders = new CopyOnWriteArrayList<>();
-        this.transactionHistory = new CopyOnWriteArrayList<>();
+        this.buyBooks = new ConcurrentHashMap<>();
+        this.sellBooks = new ConcurrentHashMap<>();
+        this.transactionHistory = new ConcurrentLinkedQueue<>();
         this.running = false;
     }
 
     public void addStock(Stock stock) {
         stocks.put(stock.getSymbol(), stock);
+        // Buy books are in descending order (highest price first)
+        buyBooks.put(stock.getSymbol(), new PriorityBlockingQueue<>(11, 
+            (a, b) -> Double.compare(b.getPricePerShare(), a.getPricePerShare())));
+        // Sell books are in ascending order (lowest price first)
+        sellBooks.put(stock.getSymbol(), new PriorityBlockingQueue<>(11, 
+            Comparator.comparingDouble(SellOrder::getPricePerShare)));
     }
 
     public Stock getStock(String symbol) {
@@ -34,128 +41,159 @@ public class StockExchange {
         return new ArrayList<>(stocks.values());
     }
 
-    public synchronized void placeBuyOrder(BuyOrder order) {
+    public void placeBuyOrder(BuyOrder order) {
         if (!running) return;
-        buyOrders.add(order);
-        Logger.logOrderPlaced(order);
-        System.out.println("✓ " + order);
-        matchOrders();
+        PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+        if (buyBook != null) {
+            buyBook.add(order);
+            Logger.logOrderPlaced(order);
+            System.out.println("✓ " + order);
+            matchOrdersForStock(order.getStock());
+        }
     }
 
-    public synchronized void placeSellOrder(SellOrder order) {
+    public void placeSellOrder(SellOrder order) {
         if (!running) return;
-        sellOrders.add(order);
-        Logger.logOrderPlaced(order);
-        System.out.println("✓ " + order);
-        matchOrders();
+        PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+        if (sellBook != null) {
+            sellBook.add(order);
+            Logger.logOrderPlaced(order);
+            System.out.println("✓ " + order);
+            matchOrdersForStock(order.getStock());
+        }
     }
 
-    public synchronized boolean cancelBuyOrder(BuyOrder order) {
-        if (buyOrders.remove(order)) {
-            order.cancel();
-            Logger.logOrderCancelled(order);
-            System.out.println("✗ Cancelled: " + order);
-            return true;
+    public boolean cancelBuyOrder(BuyOrder order) {
+        synchronized (order.getStock().getLock()) {
+            PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+            if (buyBook != null && buyBook.remove(order)) {
+                order.cancel();
+                Logger.logOrderCancelled(order);
+                System.out.println("✗ Cancelled: " + order);
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
-    public synchronized boolean cancelSellOrder(SellOrder order) {
-        if (sellOrders.remove(order)) {
-            order.cancel();
-            Logger.logOrderCancelled(order);
-            System.out.println("✗ Cancelled: " + order);
-            return true;
+    public boolean cancelSellOrder(SellOrder order) {
+        synchronized (order.getStock().getLock()) {
+            PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+            if (sellBook != null && sellBook.remove(order)) {
+                order.cancel();
+                Logger.logOrderCancelled(order);
+                System.out.println("✗ Cancelled: " + order);
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     /**
-     * Synchronized method to get the current quantity of an order.
-     * This ensures thread-safe reading of order state.
+     * Thread-safe method to get the current quantity of an order.
+     * This ensures thread-safe reading of order state by locking the stock.
      * @param order The order to check
      * @return The current quantity, or -1 if order not found in active orders
      */
-    public synchronized int getOrderQuantity(Order order) {
-        if (order instanceof BuyOrder) {
-            if (buyOrders.contains(order)) {
-                return order.getQuantity();
+    public int getOrderQuantity(Order order) {
+        synchronized (order.getStock().getLock()) {
+            if (order instanceof BuyOrder) {
+                PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+                if (buyBook != null && buyBook.contains(order)) {
+                    return order.getQuantity();
+                }
+            } else if (order instanceof SellOrder) {
+                PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+                if (sellBook != null && sellBook.contains(order)) {
+                    return order.getQuantity();
+                }
             }
-        } else if (order instanceof SellOrder) {
-            if (sellOrders.contains(order)) {
-                return order.getQuantity();
-            }
+            return -1;
         }
-        return -1; // Order not found or already completed
     }
 
-    private synchronized void matchOrders() {
-        List<BuyOrder> toRemoveBuy = new ArrayList<>();
-        List<SellOrder> toRemoveSell = new ArrayList<>();
+    /**
+     * Match orders for a specific stock only.
+     * This allows other threads to trade different stocks concurrently.
+     * @param stock The stock to match orders for
+     */
+    private void matchOrdersForStock(Stock stock) {
+        PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(stock.getSymbol());
+        PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(stock.getSymbol());
         
-        for (BuyOrder buyOrder : buyOrders) {
-            if (buyOrder.getQuantity() == 0) {
-                toRemoveBuy.add(buyOrder);
-                continue;
-            }
-
-            for (SellOrder sellOrder : sellOrders) {
-                if (sellOrder.getQuantity() == 0) {
-                    if (!toRemoveSell.contains(sellOrder)) {
-                        toRemoveSell.add(sellOrder);
-                    }
-                    continue;
-                }
-
-                // Check if orders match
-                if (buyOrder.getStock().equals(sellOrder.getStock()) &&
-                    buyOrder.getPricePerShare() >= sellOrder.getPricePerShare()) {
-                    
-                    // Execute trade
-                    int tradedQuantity = Math.min(buyOrder.getQuantity(), sellOrder.getQuantity());
-                    
-                    Transaction transaction = new Transaction(buyOrder, sellOrder, tradedQuantity);
-                    transactionHistory.add(transaction);
-                    
-                    buyOrder.reduceQuantity(tradedQuantity);
-                    sellOrder.reduceQuantity(tradedQuantity);
-                    
-                    // Update stock price based on the transaction
-                    double oldPrice = buyOrder.getStock().getCurrentPrice();
-                    double newPrice = sellOrder.getPricePerShare();
-                    if (Math.abs(newPrice - oldPrice) > 0.01) {
-                        buyOrder.getStock().setCurrentPrice(newPrice);
-                        Logger.logPriceChange(buyOrder.getStock(), oldPrice, newPrice);
-                    }
-                    
-                    Logger.logTransaction(transaction);
-                    System.out.println("★ " + transaction);
-                    
-                    if (buyOrder.getQuantity() == 0) {
-                        toRemoveBuy.add(buyOrder);
-                        break;
-                    }
-                    
-                    if (sellOrder.getQuantity() == 0) {
-                        if (!toRemoveSell.contains(sellOrder)) {
-                            toRemoveSell.add(sellOrder);
-                        }
-                    }
-                }
-            }
+        if (buyBook == null || sellBook == null) {
+            return;
         }
         
-        // Remove completed orders
-        buyOrders.removeAll(toRemoveBuy);
-        sellOrders.removeAll(toRemoveSell);
+        // Lock only for the actual matching
+        synchronized (stock.getLock()) {
+            // O(n log n) matching: process queue heads only (highest buy vs lowest sell)
+            while (!buyBook.isEmpty() && !sellBook.isEmpty()) {
+                BuyOrder buyOrder = buyBook.peek();
+                SellOrder sellOrder = sellBook.peek();
+                
+                if (buyOrder == null || sellOrder == null) break;
+                
+                // Skip zero-quantity orders
+                if (buyOrder.getQuantity() == 0) {
+                    buyBook.poll();
+                    continue;
+                }
+                if (sellOrder.getQuantity() == 0) {
+                    sellBook.poll();
+                    continue;
+                }
+                
+                // Check if orders match (highest buy price >= lowest sell price)
+                if (buyOrder.getPricePerShare() < sellOrder.getPricePerShare()) {
+                    break;
+                }
+                
+                // Execute trade
+                int tradedQuantity = Math.min(buyOrder.getQuantity(), sellOrder.getQuantity());
+                
+                Transaction transaction = new Transaction(buyOrder, sellOrder, tradedQuantity);
+                transactionHistory.add(transaction);
+                
+                buyOrder.reduceQuantity(tradedQuantity);
+                sellOrder.reduceQuantity(tradedQuantity);
+                
+                // Remove fully filled orders from queues
+                if (buyOrder.getQuantity() == 0) {
+                    buyBook.poll();
+                }
+                if (sellOrder.getQuantity() == 0) {
+                    sellBook.poll();
+                }
+                
+                // Update stock price based on the transaction
+                double oldPrice = stock.getCurrentPrice();
+                double newPrice = sellOrder.getPricePerShare();
+                if (Math.abs(newPrice - oldPrice) > 0.01) {
+                    stock.setCurrentPrice(newPrice);
+                    Logger.logPriceChange(stock, oldPrice, newPrice);
+                }
+                
+                Logger.logTransaction(transaction);
+                System.out.println("★ " + transaction);
+            }
+        }
     }
 
     public List<BuyOrder> getBuyOrders() {
-        return new ArrayList<>(buyOrders);
+        List<BuyOrder> allOrders = new ArrayList<>();
+        for (PriorityBlockingQueue<BuyOrder> buyBook : buyBooks.values()) {
+            allOrders.addAll(buyBook);
+        }
+        return allOrders;
     }
 
     public List<SellOrder> getSellOrders() {
-        return new ArrayList<>(sellOrders);
+        List<SellOrder> allOrders = new ArrayList<>();
+        for (PriorityBlockingQueue<SellOrder> sellBook : sellBooks.values()) {
+            allOrders.addAll(sellBook);
+        }
+        return allOrders;
     }
 
     public List<Transaction> getTransactionHistory() {
@@ -186,24 +224,26 @@ public class StockExchange {
     private void printSummary() {
         System.out.println("\n📊 SIMULATION SUMMARY:");
         System.out.println("   Total Transactions: " + transactionHistory.size());
-        System.out.println("   Active Buy Orders: " + buyOrders.size());
-        System.out.println("   Active Sell Orders: " + sellOrders.size());
+        System.out.println("   Active Buy Orders: " + getBuyOrders().size());
+        System.out.println("   Active Sell Orders: " + getSellOrders().size());
         
         System.out.println("\n📈 STOCK PRICES:");
         for (Stock stock : stocks.values()) {
             System.out.println("   " + stock);
         }
         
-        if (!buyOrders.isEmpty()) {
+        List<BuyOrder> allBuyOrders = getBuyOrders();
+        if (!allBuyOrders.isEmpty()) {
             System.out.println("\n📋 PENDING BUY ORDERS:");
-            for (BuyOrder order : buyOrders) {
+            for (BuyOrder order : allBuyOrders) {
                 System.out.println("   " + order);
             }
         }
         
-        if (!sellOrders.isEmpty()) {
+        List<SellOrder> allSellOrders = getSellOrders();
+        if (!allSellOrders.isEmpty()) {
             System.out.println("\n📋 PENDING SELL ORDERS:");
-            for (SellOrder order : sellOrders) {
+            for (SellOrder order : allSellOrders) {
                 System.out.println("   " + order);
             }
         }
