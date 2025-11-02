@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -12,24 +13,24 @@ public class Seller extends Thread {
     private final Random random;
     private final int minShares;
     private final int maxShares;
-    private final double priceVariance; // percentage variance from current price
     private final int minDelayMs;
     private final int maxDelayMs;
     private final int maxOrders;
     private final List<Stock> availableStocks;
+    private final List<Long> activeOrderIds;
 
     public Seller(String sellerName, StockExchange exchange, int minShares, int maxShares, 
-                  double priceVariance, int minDelayMs, int maxDelayMs, int maxOrders) {
+                  int minDelayMs, int maxDelayMs, int maxOrders) {
         this.sellerName = sellerName;
         this.exchange = exchange;
         this.random = new Random();
         this.minShares = minShares;
         this.maxShares = maxShares;
-        this.priceVariance = priceVariance;
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
         this.maxOrders = maxOrders;
         this.availableStocks = exchange.getAllStocks();
+        this.activeOrderIds = new ArrayList<>();
         setName(sellerName);
     }
 
@@ -52,23 +53,30 @@ public class Seller extends Thread {
 
                 int quantity = minShares + random.nextInt(maxShares - minShares + 1);
                 
-                // Price with variance (sellers might ask for slightly less)
-                double currentPrice = stock.getCurrentPrice();
-                double priceAdjustment = 1.0 + (random.nextDouble() * priceVariance * 2 - priceVariance);
-                double askPrice = currentPrice * priceAdjustment;
-                askPrice = Math.round(askPrice * 100.0) / 100.0; // Round to 2 decimals
-                
-                // Place sell order
-                SellOrder order = new SellOrder(sellerName, stock, quantity, askPrice);
+                // Place sell order at current stock price
+                SellOrder order = new SellOrder(sellerName, stock, quantity);
                 exchange.placeSellOrder(order);
+                activeOrderIds.add(order.getOrderId());
                 ordersPlaced++;
                 
-                // Small chance to cancel or modify the order after a short delay
-                if (random.nextDouble() < 0.15) { // 15% chance
-                    Thread.sleep(random.nextInt(500) + 100);
-                    int currentQuantity = exchange.getOrderQuantity(order);
-                    if (random.nextBoolean() && currentQuantity > 0) {
-                        exchange.cancelSellOrder(order);
+                // Randomly cancel or edit previous orders
+                if (!activeOrderIds.isEmpty() && random.nextDouble() < 0.2) { // 20% chance
+                    Thread.sleep(random.nextInt(300) + 100);
+                    long randomOrderId = activeOrderIds.get(random.nextInt(activeOrderIds.size()));
+                    
+                    double action = random.nextDouble();
+                    if (action < 0.5) {
+                        // Cancel order
+                        if (exchange.cancelSellOrderById(randomOrderId)) {
+                            activeOrderIds.remove(randomOrderId);
+                        }
+                    } else {
+                        // Edit order quantity
+                        int newQuantity = minShares + random.nextInt(maxShares - minShares + 1);
+                        if (!exchange.editSellOrder(randomOrderId, newQuantity)) {
+                            // Order doesn't exist anymore, remove from our list
+                            activeOrderIds.remove(randomOrderId);
+                        }
                     }
                 }
                 

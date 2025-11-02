@@ -23,7 +23,7 @@ public class Transaction {
         this.seller = sellOrder.getTraderName();
         this.stock = buyOrder.getStock();
         this.quantity = quantity;
-        this.pricePerShare = buyOrder.getPricePerShare();
+        this.pricePerShare = stock.getCurrentPrice();
         this.timestamp = LocalDateTime.now();
     }
 

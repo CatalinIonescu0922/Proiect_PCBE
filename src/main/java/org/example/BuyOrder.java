@@ -5,8 +5,8 @@ package org.example;
  */
 public class BuyOrder extends Order {
     
-    public BuyOrder(String traderName, Stock stock, int quantity, double pricePerShare) {
-        super(traderName, stock, quantity, pricePerShare);
+    public BuyOrder(String traderName, Stock stock, int quantity) {
+        super(traderName, stock, quantity);
     }
 
     @Override

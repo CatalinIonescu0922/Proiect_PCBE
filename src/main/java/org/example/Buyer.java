@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -12,24 +13,24 @@ public class Buyer extends Thread {
     private final Random random;
     private final int minShares;
     private final int maxShares;
-    private final double priceVariance; // percentage variance from current price
     private final int minDelayMs;
     private final int maxDelayMs;
     private final int maxOrders;
     private final List<Stock> availableStocks;
+    private final List<Long> activeOrderIds;
 
     public Buyer(String buyerName, StockExchange exchange, int minShares, int maxShares, 
-                 double priceVariance, int minDelayMs, int maxDelayMs, int maxOrders) {
+                 int minDelayMs, int maxDelayMs, int maxOrders) {
         this.buyerName = buyerName;
         this.exchange = exchange;
         this.random = new Random();
         this.minShares = minShares;
         this.maxShares = maxShares;
-        this.priceVariance = priceVariance;
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
         this.maxOrders = maxOrders;
         this.availableStocks = exchange.getAllStocks();
+        this.activeOrderIds = new ArrayList<>();
         setName(buyerName);
     }
 
@@ -52,23 +53,30 @@ public class Buyer extends Thread {
 
                 int quantity = minShares + random.nextInt(maxShares - minShares + 1);
                 
-                // Price with variance (buyers might pay slightly more)
-                double currentPrice = stock.getCurrentPrice();
-                double priceAdjustment = 1.0 + (random.nextDouble() * priceVariance * 2 - priceVariance);
-                double bidPrice = currentPrice * priceAdjustment;
-                bidPrice = Math.round(bidPrice * 100.0) / 100.0; // Round to 2 decimals
-                
-                // Place buy order
-                BuyOrder order = new BuyOrder(buyerName, stock, quantity, bidPrice);
+                // Place buy order at current stock price
+                BuyOrder order = new BuyOrder(buyerName, stock, quantity);
                 exchange.placeBuyOrder(order);
+                activeOrderIds.add(order.getOrderId());
                 ordersPlaced++;
                 
-                // Small chance to cancel or modify the order after a short delay
-                if (random.nextDouble() < 0.15) { // 15% chance
-                    Thread.sleep(random.nextInt(500) + 100);
-                    int currentQuantity = exchange.getOrderQuantity(order);
-                    if (random.nextBoolean() && currentQuantity > 0) {
-                        exchange.cancelBuyOrder(order);
+                // Randomly cancel or edit previous orders
+                if (!activeOrderIds.isEmpty() && random.nextDouble() < 0.2) { // 20% chance
+                    Thread.sleep(random.nextInt(300) + 100);
+                    long randomOrderId = activeOrderIds.get(random.nextInt(activeOrderIds.size()));
+                    
+                    double action = random.nextDouble();
+                    if (action < 0.5) {
+                        // Cancel order
+                        if (exchange.cancelBuyOrderById(randomOrderId)) {
+                            activeOrderIds.remove(randomOrderId);
+                        }
+                    } else {
+                        // Edit order quantity
+                        int newQuantity = minShares + random.nextInt(maxShares - minShares + 1);
+                        if (!exchange.editBuyOrder(randomOrderId, newQuantity)) {
+                            // Order doesn't exist anymore, remove from our list
+                            activeOrderIds.remove(randomOrderId);
+                        }
                     }
                 }
                 

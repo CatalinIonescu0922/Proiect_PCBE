@@ -12,17 +12,15 @@ public abstract class Order {
     private final long orderId;
     private final String traderName;
     private final Stock stock;
-    private final double pricePerShare;
     private volatile int quantity;
     private final LocalDateTime timestamp;
     private volatile boolean cancelled;
 
-    public Order(String traderName, Stock stock, int quantity, double pricePerShare) {
+    public Order(String traderName, Stock stock, int quantity) {
         this.orderId = orderIdGenerator.getAndIncrement();
         this.traderName = traderName;
         this.stock = stock;
         this.quantity = quantity;
-        this.pricePerShare = pricePerShare;
         this.timestamp = LocalDateTime.now();
         this.cancelled = false;
     }
@@ -37,10 +35,6 @@ public abstract class Order {
 
     public Stock getStock() {
         return stock;
-    }
-
-    public double getPricePerShare() {
-        return pricePerShare;
     }
 
     public synchronized int getQuantity() {
@@ -67,7 +61,7 @@ public abstract class Order {
 
     @Override
     public String toString() {
-        return String.format("%s Order #%d [%s] - %s: %d shares @ $%.2f/share", 
-            getOrderType(), orderId, traderName, stock.getSymbol(), quantity, pricePerShare);
+        return String.format("%s Order #%d [%s] - %s: %d shares", 
+            getOrderType(), orderId, traderName, stock.getSymbol(), quantity);
     }
 }

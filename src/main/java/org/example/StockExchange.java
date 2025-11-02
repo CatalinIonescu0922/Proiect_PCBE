@@ -1,17 +1,22 @@
 package org.example;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Central stock exchange that manages all orders and matches buyers with sellers
  */
 public class StockExchange {
     private final Map<String, Stock> stocks;
-    private final Map<String, PriorityBlockingQueue<BuyOrder>> buyBooks;
-    private final Map<String, PriorityBlockingQueue<SellOrder>> sellBooks;
+    private final Map<String, LinkedBlockingDeque<BuyOrder>> buyBooks;
+    private final Map<String, LinkedBlockingDeque<SellOrder>> sellBooks;
+    private final Map<Long, BuyOrder> buyOrdersById;
+    private final Map<Long, SellOrder> sellOrdersById;
     private final Queue<Transaction> transactionHistory;
     private volatile boolean running;
 
@@ -19,18 +24,17 @@ public class StockExchange {
         this.stocks = new ConcurrentHashMap<>();
         this.buyBooks = new ConcurrentHashMap<>();
         this.sellBooks = new ConcurrentHashMap<>();
+        this.buyOrdersById = new ConcurrentHashMap<>();
+        this.sellOrdersById = new ConcurrentHashMap<>();
         this.transactionHistory = new ConcurrentLinkedQueue<>();
         this.running = false;
     }
 
     public void addStock(Stock stock) {
         stocks.put(stock.getSymbol(), stock);
-        // Buy books are in descending order (highest price first)
-        buyBooks.put(stock.getSymbol(), new PriorityBlockingQueue<>(11, 
-            (a, b) -> Double.compare(b.getPricePerShare(), a.getPricePerShare())));
-        // Sell books are in ascending order (lowest price first)
-        sellBooks.put(stock.getSymbol(), new PriorityBlockingQueue<>(11, 
-            Comparator.comparingDouble(SellOrder::getPricePerShare)));
+        // Buy and sell books maintain chronological order (FIFO)
+        buyBooks.put(stock.getSymbol(), new LinkedBlockingDeque<>());
+        sellBooks.put(stock.getSymbol(), new LinkedBlockingDeque<>());
     }
 
     public Stock getStock(String symbol) {
@@ -43,9 +47,10 @@ public class StockExchange {
 
     public void placeBuyOrder(BuyOrder order) {
         if (!running) return;
-        PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+        LinkedBlockingDeque<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
         if (buyBook != null) {
             buyBook.add(order);
+            buyOrdersById.put(order.getOrderId(), order);
             Logger.logOrderPlaced(order);
             System.out.println("✓ " + order);
             matchOrdersForStock(order.getStock());
@@ -54,9 +59,10 @@ public class StockExchange {
 
     public void placeSellOrder(SellOrder order) {
         if (!running) return;
-        PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+        LinkedBlockingDeque<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
         if (sellBook != null) {
             sellBook.add(order);
+            sellOrdersById.put(order.getOrderId(), order);
             Logger.logOrderPlaced(order);
             System.out.println("✓ " + order);
             matchOrdersForStock(order.getStock());
@@ -65,8 +71,9 @@ public class StockExchange {
 
     public boolean cancelBuyOrder(BuyOrder order) {
         synchronized (order.getStock().getLock()) {
-            PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+            LinkedBlockingDeque<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
             if (buyBook != null && buyBook.remove(order)) {
+                buyOrdersById.remove(order.getOrderId());
                 order.cancel();
                 Logger.logOrderCancelled(order);
                 System.out.println("✗ Cancelled: " + order);
@@ -78,8 +85,9 @@ public class StockExchange {
 
     public boolean cancelSellOrder(SellOrder order) {
         synchronized (order.getStock().getLock()) {
-            PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+            LinkedBlockingDeque<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
             if (sellBook != null && sellBook.remove(order)) {
+                sellOrdersById.remove(order.getOrderId());
                 order.cancel();
                 Logger.logOrderCancelled(order);
                 System.out.println("✗ Cancelled: " + order);
@@ -87,6 +95,80 @@ public class StockExchange {
             }
             return false;
         }
+    }
+
+    public boolean cancelBuyOrderById(long orderId) {
+        BuyOrder order = buyOrdersById.get(orderId);
+        if (order != null) {
+            return cancelBuyOrder(order);
+        }
+        return false;
+    }
+
+    public boolean cancelSellOrderById(long orderId) {
+        SellOrder order = sellOrdersById.get(orderId);
+        if (order != null) {
+            return cancelSellOrder(order);
+        }
+        return false;
+    }
+
+    public boolean editBuyOrder(long orderId, int newQuantity) {
+        if (newQuantity <= 0) return false;
+        
+        BuyOrder order = buyOrdersById.get(orderId);
+        if (order == null) return false;
+        
+        Stock stock = order.getStock();
+        LinkedBlockingDeque<BuyOrder> buyBook = buyBooks.get(stock.getSymbol());
+        
+        if (buyBook != null) {
+            synchronized (stock.getLock()) {
+                if (buyBook.remove(order)) {
+                    int oldQuantity = order.getQuantity();
+                    BuyOrder newOrder = new BuyOrder(order.getTraderName(), stock, newQuantity);
+                    buyBook.add(newOrder);
+                    buyOrdersById.remove(orderId);
+                    buyOrdersById.put(newOrder.getOrderId(), newOrder);
+                    Logger.logEvent(String.format("Order #%d quantity edited: %d -> %d shares", 
+                        orderId, oldQuantity, newQuantity));
+                    System.out.println(String.format("✎ Edited: BUY Order #%d - %s: %d -> %d shares",
+                        orderId, stock.getSymbol(), oldQuantity, newQuantity));
+                    matchOrdersForStock(stock);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean editSellOrder(long orderId, int newQuantity) {
+        if (newQuantity <= 0) return false;
+        
+        SellOrder order = sellOrdersById.get(orderId);
+        if (order == null) return false;
+        
+        Stock stock = order.getStock();
+        LinkedBlockingDeque<SellOrder> sellBook = sellBooks.get(stock.getSymbol());
+        
+        if (sellBook != null) {
+            synchronized (stock.getLock()) {
+                if (sellBook.remove(order)) {
+                    int oldQuantity = order.getQuantity();
+                    SellOrder newOrder = new SellOrder(order.getTraderName(), stock, newQuantity);
+                    sellBook.add(newOrder);
+                    sellOrdersById.remove(orderId);
+                    sellOrdersById.put(newOrder.getOrderId(), newOrder);
+                    Logger.logEvent(String.format("Order #%d quantity edited: %d -> %d shares", 
+                        orderId, oldQuantity, newQuantity));
+                    System.out.println(String.format("✎ Edited: SELL Order #%d - %s: %d -> %d shares",
+                        orderId, stock.getSymbol(), oldQuantity, newQuantity));
+                    matchOrdersForStock(stock);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -98,12 +180,12 @@ public class StockExchange {
     public int getOrderQuantity(Order order) {
         synchronized (order.getStock().getLock()) {
             if (order instanceof BuyOrder) {
-                PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
+                LinkedBlockingDeque<BuyOrder> buyBook = buyBooks.get(order.getStock().getSymbol());
                 if (buyBook != null && buyBook.contains(order)) {
                     return order.getQuantity();
                 }
             } else if (order instanceof SellOrder) {
-                PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
+                LinkedBlockingDeque<SellOrder> sellBook = sellBooks.get(order.getStock().getSymbol());
                 if (sellBook != null && sellBook.contains(order)) {
                     return order.getQuantity();
                 }
@@ -114,12 +196,13 @@ public class StockExchange {
 
     /**
      * Match orders for a specific stock only.
-     * This allows other threads to trade different stocks concurrently.
+     * Orders are matched in chronological order, starting with the latest orders.
+     * The stock price is updated after each transaction.
      * @param stock The stock to match orders for
      */
     private void matchOrdersForStock(Stock stock) {
-        PriorityBlockingQueue<BuyOrder> buyBook = buyBooks.get(stock.getSymbol());
-        PriorityBlockingQueue<SellOrder> sellBook = sellBooks.get(stock.getSymbol());
+        LinkedBlockingDeque<BuyOrder> buyBook = buyBooks.get(stock.getSymbol());
+        LinkedBlockingDeque<SellOrder> sellBook = sellBooks.get(stock.getSymbol());
         
         if (buyBook == null || sellBook == null) {
             return;
@@ -127,29 +210,25 @@ public class StockExchange {
         
         // Lock only for the actual matching
         synchronized (stock.getLock()) {
-            // O(n log n) matching: process queue heads only (highest buy vs lowest sell)
+            // Process latest orders first (from the end of the deque)
             while (!buyBook.isEmpty() && !sellBook.isEmpty()) {
-                BuyOrder buyOrder = buyBook.peek();
-                SellOrder sellOrder = sellBook.peek();
+                // Get latest orders (most recent)
+                BuyOrder buyOrder = buyBook.peekLast();
+                SellOrder sellOrder = sellBook.peekLast();
                 
                 if (buyOrder == null || sellOrder == null) break;
                 
                 // Skip zero-quantity orders
                 if (buyOrder.getQuantity() == 0) {
-                    buyBook.poll();
+                    buyBook.pollLast();
                     continue;
                 }
                 if (sellOrder.getQuantity() == 0) {
-                    sellBook.poll();
+                    sellBook.pollLast();
                     continue;
                 }
                 
-                // Check if orders match (highest buy price >= lowest sell price)
-                if (buyOrder.getPricePerShare() < sellOrder.getPricePerShare()) {
-                    break;
-                }
-                
-                // Execute trade
+                // Execute trade at current stock price
                 int tradedQuantity = Math.min(buyOrder.getQuantity(), sellOrder.getQuantity());
                 
                 Transaction transaction = new Transaction(buyOrder, sellOrder, tradedQuantity);
@@ -158,17 +237,23 @@ public class StockExchange {
                 buyOrder.reduceQuantity(tradedQuantity);
                 sellOrder.reduceQuantity(tradedQuantity);
                 
-                // Remove fully filled orders from queues
+                // Remove fully filled orders from queues and maps
                 if (buyOrder.getQuantity() == 0) {
-                    buyBook.poll();
+                    buyBook.pollLast();
+                    buyOrdersById.remove(buyOrder.getOrderId());
                 }
                 if (sellOrder.getQuantity() == 0) {
-                    sellBook.poll();
+                    sellBook.pollLast();
+                    sellOrdersById.remove(sellOrder.getOrderId());
                 }
                 
-                // Update stock price based on the transaction
+                // Update stock price after the transaction
+                // Price moves based on supply/demand: slight random fluctuation
                 double oldPrice = stock.getCurrentPrice();
-                double newPrice = sellOrder.getPricePerShare();
+                double priceChange = (Math.random() - 0.5) * 0.02 * oldPrice; // +/- 1% random change
+                double newPrice = oldPrice + priceChange;
+                newPrice = Math.round(newPrice * 100.0) / 100.0; // Round to 2 decimals
+                
                 if (Math.abs(newPrice - oldPrice) > 0.01) {
                     stock.setCurrentPrice(newPrice);
                     Logger.logPriceChange(stock, oldPrice, newPrice);
@@ -182,7 +267,7 @@ public class StockExchange {
 
     public List<BuyOrder> getBuyOrders() {
         List<BuyOrder> allOrders = new ArrayList<>();
-        for (PriorityBlockingQueue<BuyOrder> buyBook : buyBooks.values()) {
+        for (LinkedBlockingDeque<BuyOrder> buyBook : buyBooks.values()) {
             allOrders.addAll(buyBook);
         }
         return allOrders;
@@ -190,7 +275,7 @@ public class StockExchange {
 
     public List<SellOrder> getSellOrders() {
         List<SellOrder> allOrders = new ArrayList<>();
-        for (PriorityBlockingQueue<SellOrder> sellBook : sellBooks.values()) {
+        for (LinkedBlockingDeque<SellOrder> sellBook : sellBooks.values()) {
             allOrders.addAll(sellBook);
         }
         return allOrders;

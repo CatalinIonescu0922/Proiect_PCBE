@@ -26,19 +26,19 @@ public class Main {
         
         // Create buyer threads with names
         List<Buyer> buyers = new ArrayList<>();
-        buyers.add(new Buyer("Buyer-Alice", exchange, 5, 50, 0.05, 200, 1000, 8));
-        buyers.add(new Buyer("Buyer-Bob", exchange, 10, 100, 0.03, 300, 1200, 7));
-        buyers.add(new Buyer("Buyer-Charlie", exchange, 3, 30, 0.08, 150, 800, 10));
-        buyers.add(new Buyer("Buyer-Diana", exchange, 8, 60, 0.04, 250, 1100, 9));
-        buyers.add(new Buyer("Buyer-Ethan", exchange, 15, 80, 0.06, 400, 1500, 6));
+        buyers.add(new Buyer("Buyer-Alice", exchange, 5, 50, 200, 1000, 8));
+        buyers.add(new Buyer("Buyer-Bob", exchange, 10, 100, 300, 1200, 7));
+        buyers.add(new Buyer("Buyer-Charlie", exchange, 3, 30, 150, 800, 10));
+        buyers.add(new Buyer("Buyer-Diana", exchange, 8, 60, 250, 1100, 9));
+        buyers.add(new Buyer("Buyer-Ethan", exchange, 15, 80, 400, 1500, 6));
         
         // Create seller threads with names
         List<Seller> sellers = new ArrayList<>();
-        sellers.add(new Seller("Seller-Frank", exchange, 5, 50, 0.05, 250, 1000, 8));
-        sellers.add(new Seller("Seller-Grace", exchange, 10, 100, 0.03, 350, 1200, 7));
-        sellers.add(new Seller("Seller-Henry", exchange, 3, 30, 0.08, 200, 800, 10));
-        sellers.add(new Seller("Seller-Ivy", exchange, 8, 60, 0.04, 300, 1100, 9));
-        sellers.add(new Seller("Seller-Jack", exchange, 15, 80, 0.06, 450, 1500, 6));
+        sellers.add(new Seller("Seller-Frank", exchange, 5, 50, 250, 1000, 8));
+        sellers.add(new Seller("Seller-Grace", exchange, 10, 100, 350, 1200, 7));
+        sellers.add(new Seller("Seller-Henry", exchange, 3, 30, 200, 800, 10));
+        sellers.add(new Seller("Seller-Ivy", exchange, 8, 60, 300, 1100, 9));
+        sellers.add(new Seller("Seller-Jack", exchange, 15, 80, 450, 1500, 6));
         
         // Start all threads
         for (Buyer buyer : buyers) {
