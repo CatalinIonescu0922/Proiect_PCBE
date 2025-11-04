@@ -2,9 +2,15 @@ package org.example;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Main {
     public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+
         // Clear previous logs
         Logger.clearLogs();
         
@@ -40,33 +46,38 @@ public class Main {
         sellers.add(new Seller("Seller-Ivy", exchange, 8, 60, 300, 1100, 9));
         sellers.add(new Seller("Seller-Jack", exchange, 15, 80, 450, 1500, 6));
         
+        List<Future<String>> sellerFutures = new ArrayList<>();
+        List<Future<String>> buyersFutures = new ArrayList<>();
         // Start all threads
         for (Buyer buyer : buyers) {
-            buyer.start();
+            Future<String> future = executor.submit(buyer);
+            buyersFutures.add(future);
         }
         
         for (Seller seller : sellers) {
-            seller.start();
+            Future<String> future = executor.submit(seller);
+            sellerFutures.add(future);
         }
         
         // Wait for all threads to complete
-        try {
-            for (Buyer buyer : buyers) {
-                buyer.join();
+        for (Future<String> future : sellerFutures) {
+            try {
+                String result = future.get();   //Read the output for each seller thread
+                System.out.println("Task completed: " + result);
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
-            
-            for (Seller seller : sellers) {
-                seller.join();
+        }
+
+        for (Future<String> future : buyersFutures) {
+            try {
+                String result = future.get();  //Read the output for each buyer thread
+                System.out.println("Task completed: " + result);
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
-            
-            // Give some time for final transactions to process
-            Thread.sleep(1000);
-            
-        } catch (InterruptedException e) {
-            System.err.println("Main thread interrupted: " + e.getMessage());
         }
         
-        // Stop the exchange and print summary
-        exchange.stop();
+        executor.shutdown();
     }
 }

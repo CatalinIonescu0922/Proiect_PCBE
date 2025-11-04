@@ -3,39 +3,21 @@ package org.example;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 /**
  * Buyer thread that randomly buys stocks from the exchange
  */
-public class Buyer extends Thread {
-    private final String buyerName;
-    private final StockExchange exchange;
-    private final Random random;
-    private final int minShares;
-    private final int maxShares;
-    private final int minDelayMs;
-    private final int maxDelayMs;
-    private final int maxOrders;
-    private final List<Stock> availableStocks;
-    private final List<Long> activeOrderIds;
+public class Buyer extends Client implements Callable<String>{
 
     public Buyer(String buyerName, StockExchange exchange, int minShares, int maxShares, 
                  int minDelayMs, int maxDelayMs, int maxOrders) {
-        this.buyerName = buyerName;
-        this.exchange = exchange;
-        this.random = new Random();
-        this.minShares = minShares;
-        this.maxShares = maxShares;
-        this.minDelayMs = minDelayMs;
-        this.maxDelayMs = maxDelayMs;
-        this.maxOrders = maxOrders;
-        this.availableStocks = exchange.getAllStocks();
-        this.activeOrderIds = new ArrayList<>();
-        setName(buyerName);
+        super(buyerName, exchange, minShares, maxShares, 
+                 minDelayMs, maxDelayMs, maxOrders);
     }
 
     @Override
-    public void run() {
+    public String call() throws Exception {
         int ordersPlaced = 0;
         
         while (exchange.isRunning() && ordersPlaced < maxOrders) {
@@ -54,7 +36,7 @@ public class Buyer extends Thread {
                 int quantity = minShares + random.nextInt(maxShares - minShares + 1);
                 
                 // Place buy order at current stock price
-                BuyOrder order = new BuyOrder(buyerName, stock, quantity);
+                BuyOrder order = new BuyOrder(name, stock, quantity);
                 exchange.placeBuyOrder(order);
                 activeOrderIds.add(order.getOrderId());
                 ordersPlaced++;
@@ -86,7 +68,7 @@ public class Buyer extends Thread {
             }
         }
         
-        Logger.logEvent(buyerName + " has finished trading (placed " + ordersPlaced + " orders)");
-        System.out.println("🔵 " + buyerName + " has finished trading");
+        Logger.logEvent(name + " has finished trading (placed " + ordersPlaced + " orders)");
+        return "🔵 " + name + " has finished trading";
     }
 }
