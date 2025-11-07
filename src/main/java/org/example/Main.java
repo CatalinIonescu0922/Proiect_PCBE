@@ -78,6 +78,7 @@ public class Main {
             }
         }
         
+        exchange.stop();
         executor.shutdown();
     }
 }
