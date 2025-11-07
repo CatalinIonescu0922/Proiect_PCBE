@@ -1,0 +1,69 @@
+Client :
+        clientID
+        stocks
+        clientType -> Seller, Buyer
+        stockExchange -> "token" de acces la piata de actiuni 
+                      -> prin intermediul acestui token o sa se execute comenzile dorite in piata (avem acces la listele de comenzi, etc)
+        random -> generator de valori random pentru a simula ca preturile actiunilor se iau random, momentul la care se doreste sa se faca o actiune e random, execute
+
+Buyer extends Client :
+        ordersPlaced
+
+        method: run(){
+            while exchange.isRunning() //piata e available
+
+            1)// random delay before placing next buy order
+            2)// selecteaza random un tip de actiuni pe care doreste sa le cumpere
+            3)// selecteaza random pretul la care vrea sa le cumpere
+            4)// cauta in piata daca exista o astfel de oferta CU TIPUL CERUT DE ACTIUNI, cu o marja de eroare a pretului de (pe plus) o suma, daca pretul e <= (suma oferita + marja de eroare setata) atunci pot cumpara, si cu cel putin numarul de actiuni cerute, adica e [..]
+            [..] foarte greu sa se nimereasca fix pretul corect, asa ca putem pune un interval in care buyer-ul e dispus sa isi modifice oferta
+            5)// daca in piata nu s-a gasit nicio oferta cu actiunle respective, se plaseaza comanda si ramane ca handler-ul exchange sa se ocupe mai tarziu cand apare o oferta de tipul actiunilor dorite, daca renegociaza
+            
+            ordersPlaced++;
+        }
+
+Seller extends Client :
+        ordersPlaced
+
+        method: run(){
+            while exchange.isRunning() //piata e available
+
+            1)// random delay before placing next sell order
+            2)// selecteaza random un tip de actiuni pe care doreste sa le vanda
+            3)// selecteaza random un pret pentru acestea
+            4)// creeaza oferta si le pune pe piata
+
+            ordersPlaced++;
+
+        }
+
+Order :
+        orderId
+        traderName
+        stock -> actiunea pe care o vinde (cu tipul si pretul ei)
+        quantity of stocks
+        isCancelled
+
+        methods{
+            getters setters for attributes
+
+        }
+
+Stock :
+        stockId
+        currentMarketPrice
+
+        methods{
+            get price
+            set new price
+        }
+
+StockExchange:
+        LinkedList -> pentru sellers -> unde pun sellerii pachetele cu actiunile pe care le vanda
+        LinkedList -> pentru buyers -> unde un buyer isi pune comanda pentru actiunile pe care doreste sa le cumpere
+
+        Intrebare: Piata face toate reglajele -> face potrivirea intre seller si buyer sau sellerii isi cauta in piata actiunile dorite?
+        Cel mai bine: fiecare seller isi face management pentru actiunile pe care le cere si fiecare buyer face management pentru actiunile pe care le [..]
+        [..] pune pe piata, si fiecare pot avea un numar maxim de actiuni pe care le listeaza si le tot negociaza pana ajung sa le vanda respectiv, sa le cumpere
+
+        Aici e partea mai complicata, scrieti si voi niste idei.
